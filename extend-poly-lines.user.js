@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        0.0.2.20161001.211400
+// @version        0.0.3.20161001.222500
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of a polygon out past their vertices. Useful for determining which portals can be used for a layered field. drawTools Required.
@@ -50,13 +50,15 @@ window.plugin.extendPolyLines.linesLayerGroup = null;
 window.plugin.extendPolyLines.updateLayer = function() {
   if (!window.map.hasLayer(window.plugin.extendPolyLines.linesLayerGroup))
     return;
-
+  
+  
   // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/) 
   var vincenty_inverse =  function (p1, p2) {
     var φ1 = p1.lat.toRadians(), λ1 = p1.lng.toRadians();
     var φ2 = p2.lat.toRadians(), λ2 = p2.lng.toRadians();
-
-    var a = this.datum.ellipsoid.a, b = this.datum.ellipsoid.b, f = this.datum.ellipsoid.f;
+    
+    var ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
+    var a = ellipsoid.a, b = ellipsoid.b, f = ellipsoid.f;
 
     var L = λ2 - λ1;
     var tanU1 = (1-f) * Math.tan(φ1), cosU1 = 1 / Math.sqrt((1 + tanU1*tanU1)), sinU1 = tanU1 * cosU1;
@@ -105,7 +107,8 @@ window.plugin.extendPolyLines.updateLayer = function() {
     var α1 = initialBearing.toRadians();
     var s = distance;
 
-    var a = this.datum.ellipsoid.a, b = this.datum.ellipsoid.b, f = this.datum.ellipsoid.f;
+    var ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
+    var a = ellipsoid.a, b = ellipsoid.b, f = ellipsoid.f;
 
     var sinα1 = Math.sin(α1);
     var cosα1 = Math.cos(α1);
@@ -155,19 +158,38 @@ window.plugin.extendPolyLines.updateLayer = function() {
   };
 
   var mapZoomToDistance = function(zoomLevel) {
-    return 1000; //TODO: Find reasonable values for various zoom levels
+    switch(zoomLevel) {
+      case 17: return 2500;
+      case 16: return 5000;
+      case 15: return 10000;
+      case 14: return 20000;
+      case 13: return 40000;
+      case 12: return 80000;
+      case 11: return 160000;
+      case 10: return 320000;
+      case 9: return 640000;
+      case 8: return 1280000;
+      case 7: return 2560000;
+      case 6: return 5120000;
+      case 5: return 10240000;
+      case 4: return 20480000;
+      case 3: return 40960000;
+      case 2: return 81920000;
+      case 1: return 163840000;
+    }
+    return 10000; 
   };
 
   var extendEdge = function(a,b) {
     var finalBearing = vincenty_inverse(a,b).finalBearing;
-    var direct = vincenty_direct(b, finalBearing, mapZoomToDistance(window.map.zoom), true);
-    var c = L.LatLng(direct.lat, direct.lng);
+    var direct = vincenty_direct(b, finalBearing, mapZoomToDistance(window.map.getZoom()), true);
+    var c = new L.LatLng(direct.lat, direct.lng);
     drawLink(b, c, {
       color: '#FF0000',
       opacity: 1,
       weight: 1.5,
       clickable: false,
-      smoothFactor: 10,
+      smoothFactor: 5,
       dashArray: [6, 4],
     });
   };
@@ -179,7 +201,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
       var previousVertex = (idx === 0) ? vertices[vertices.length - 1] : vertices[idx - 1];
       var nextVertex = (idx === (vertices.length - 1)) ? vertices[0] : vertices[idx + 1];
       extendEdge(previousVertex, vertex);
-      extendEdge(vertex, nextVertex);
+      extendEdge(nextVertex, vertex);
     });
 
     
@@ -219,6 +241,16 @@ window.plugin.extendPolyLines.setup = function() {
 }
 var setup = window.plugin.extendPolyLines.setup;
 
+  
+/** Extend Number object with method to convert numeric degrees to radians */
+if (typeof Number.prototype.toRadians == 'undefined') {
+    Number.prototype.toRadians = function() { return this * Math.PI / 180; }
+}
+  
+/** Extend Number object with method to convert radians to numeric (signed) degrees */
+if (typeof Number.prototype.toDegrees == 'undefined') {
+    Number.prototype.toDegrees = function() { return this * 180 / Math.PI; }
+}
 // PLUGIN END //////////////////////////////////////////////////////////
 
 
