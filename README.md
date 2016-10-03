@@ -1,4 +1,4 @@
-# IITCPlugins
+# TheSned's IITC Plugins
 
 ### Extend Polygon Lines
 
