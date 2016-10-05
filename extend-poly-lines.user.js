@@ -229,7 +229,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
 window.plugin.extendPolyLines.setup = function() {
   window.plugin.extendPolyLines.linesLayerGroup = new L.LayerGroup();
   
-  window.addHook('mapDataRefreshEnd', function(e) {
+  window.addHook('iitcLoaded', function(e) {
     window.plugin.extendPolyLines.updateLayer();
   });
 
@@ -237,6 +237,11 @@ window.plugin.extendPolyLines.setup = function() {
     if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
   });
+
+  window.map.on('zoomend', function(e) {
+    window.plugin.extendPolyLines.updateLayer();
+  });
+
   window.map.on('layerremove', function(e) {
     if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
