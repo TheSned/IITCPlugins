@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        0.0.7
+// @version        0.0.8
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of a polygon out past their vertices. Useful for determining which portals can be used for a layered field. drawTools Required.
@@ -27,23 +27,8 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 
 // PLUGIN START ////////////////////////////////////////////////////////
 
-  /* whatsnew
-   * 0.0.1 : initial release, runs with drawtools plugin installed, takes completed polygon(s) and then runs standard Fly Links logic.
-   *
-   * This is a hacked together version of the IITC plugin: Fly Links (v0.2.1.20140815.141737) http://iitc.jonatkins.com/release/plugins/fly-links.user.js
-   *
-   * todo : 
-   *  -polygons currently handled as "rectanges", thus outlying portals from polygons can slip in - need to find a way to calculate incusion to a true polygon
-   */
-
 // use own namespace for plugin
 window.plugin.extendPolyLines = function() {};
-
-// const values
-
-// zoom level used for projecting points between latLng and pixel coordinates. may affect precision of triangulation
-window.plugin.extendPolyLines.PROJECT_ZOOM = 16;
-
 
 window.plugin.extendPolyLines.linesLayerGroup = null;
 
@@ -51,6 +36,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
   if (!window.map.hasLayer(window.plugin.extendPolyLines.linesLayerGroup))
     return;
   
+  window.performance.mark("updateLayerStart");
   
   // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/) 
   var vincenty_inverse =  function (p1, p2) {
@@ -157,32 +143,12 @@ window.plugin.extendPolyLines.updateLayer = function() {
     poly.addTo(window.plugin.extendPolyLines.linesLayerGroup);
   };
 
-  var mapZoomToDistance = function(zoomLevel) {
-    switch(zoomLevel) {
-      case 17: return 2500;
-      case 16: return 5000;
-      case 15: return 10000;
-      case 14: return 20000;
-      case 13: return 40000;
-      case 12: return 80000;
-      case 11: return 160000;
-      case 10: return 320000;
-      case 9: return 640000;
-      case 8: return 1280000;
-      case 7: return 2560000;
-      case 6: return 5120000;
-      case 5: return 10240000;
-      case 4: return 20480000;
-      case 3: return 40960000;
-      case 2: return 81920000;
-      case 1: return 163840000;
-    }
-    return 10000; 
-  };
-
   var extendEdge = function(a,b) {
-    var finalBearing = vincenty_inverse(a,b).finalBearing;
-    var direct = vincenty_direct(b, finalBearing, mapZoomToDistance(window.map.getZoom()), true);
+    var inverse = vincenty_inverse(a,b);
+    var maxLinkDistance = 6881280;
+    var maxLinkToAnchor = maxLinkDistance - inverse.distance;
+    if(maxLinkToAnchor < 0) return;
+    var direct = vincenty_direct(b, inverse.finalBearing, maxLinkToAnchor, true);
     var c = new L.LatLng(direct.lat, direct.lng);
     drawLink(b, c, {
       color: '#FF0000',
@@ -203,27 +169,33 @@ window.plugin.extendPolyLines.updateLayer = function() {
       extendEdge(previousVertex, vertex);
       extendEdge(nextVertex, vertex);
     });
+  };
 
-    
+  var processPolyline = function(layer) {
+    var vertices = layer.getLatLngs();
+
+    $.each(vertices, function(idx, vertex) {
+      if(idx === 0 || idx === (vertices.length - 1)) return;
+      var previousVertex = vertices[idx - 1];
+      var nextVertex = vertices[idx + 1];
+      extendEdge(previousVertex, vertex);
+      extendEdge(nextVertex, vertex);
+    });
   };
 
   window.plugin.extendPolyLines.linesLayerGroup.clearLayers();
-  // var ctrl = [$('.leaflet-control-layers-selector + span:contains("Extend Polygon Lines")').parent()];
-  // if (Object.keys(window.portals).length > window.plugin.extendPolyLines.MAX_PORTALS_TO_OBSERVE) {
-  //   $.each(ctrl, function(guid, ctl) {ctl.addClass('disabled').attr('title', 'Too many portals: ' + Object.keys(window.portals).length);});
-  //   return;
-  // }
-  
 
-  var bounds;
   window.plugin.drawTools.drawnItems.eachLayer(function(layer) {
-    if (!(layer instanceof L.GeodesicPolygon)) {
-      return;
-    }
-    else{
+    if (layer instanceof L.GeodesicPolygon)
       processPolygon(layer);
-    }
+    else if (layer instanceof L.GeodesicPolyline)
+      processPolyline(layer);
   });
+  
+  window.performance.mark("updateLayerEnd");
+  window.performance.measure("updateLayer", "updateLayerStart", "updateLayerEnd");
+  console.log("Extend Polygon Lines: updateLayer took " + window.performance.getEntriesByName("updateLayer")[0].duration + " ms");
+  window.performance.clearMeasures("updateLayer");
 }
 
 window.plugin.extendPolyLines.setup = function() {
