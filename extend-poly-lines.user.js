@@ -233,6 +233,15 @@ window.plugin.extendPolyLines.setup = function() {
     window.plugin.extendPolyLines.updateLayer();
   });
 
+  window.map.on('layeradd', function(e) {
+    if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
+      window.plugin.extendPolyLines.updateLayer();
+  });
+  window.map.on('layerremove', function(e) {
+    if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
+      window.plugin.extendPolyLines.updateLayer();
+  });
+
   window.addHook('pluginDrawTools', function(e) {
     window.plugin.extendPolyLines.updateLayer();
   });
