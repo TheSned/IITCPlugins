@@ -38,8 +38,24 @@ window.plugin.extendPolyLines.updateLayer = function() {
   var drawPolylineLines = window.map.hasLayer(window.plugin.extendPolyLines.polylineLinesLayerGroup);
   if (!(drawPolygonLines || drawPolylineLines))
     return;
+
+  var mark = function (name) {
+    window.performance && window.performance.mark && window.performance.mark(name);
+  };
+
+  var measure = function(name, start, end) {
+    window.performance && window.performance.measure && window.performance.measure(name, start, end);
+  };
+
+  var clearMeasures = function() {
+    window.performance && window.performance.clearMeasures && window.performance.clearMeasures();
+  }
+
+  var logMeasurement = function(text) {
+    window.performance && window.performance.getEntriesByType && console.log(text + " took " + window.performance.getEntriesByName("updateLayer")[0].duration + "ms")
+  }
   
-  window.performance.mark("updateLayerStart");
+  mark("updateLayerStart");
   
   // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/) 
   var vincenty_inverse =  function (p1, p2) {
@@ -196,10 +212,10 @@ window.plugin.extendPolyLines.updateLayer = function() {
       processPolyline(layer);
   });
   
-  window.performance.mark("updateLayerEnd");
-  window.performance.measure("updateLayer", "updateLayerStart", "updateLayerEnd");
-  console.log("Extend Polygon Lines: updateLayer took " + window.performance.getEntriesByName("updateLayer")[0].duration + " ms");
-  window.performance.clearMeasures("updateLayer");
+  mark("updateLayerEnd");
+  measure("updateLayer", "updateLayerStart", "updateLayerEnd");
+  logMeasurement("Extend Polygon Lines: updateLayer");
+  clearMeasures("updateLayer");
 }
 
 window.plugin.extendPolyLines.setup = function() {
