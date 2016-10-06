@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        0.0.9
+// @version        1.0.0
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of a polygon out past their vertices. Useful for determining which portals can be used for a layered field. drawTools Required.
@@ -38,24 +38,6 @@ window.plugin.extendPolyLines.updateLayer = function() {
   var drawPolylineLines = window.map.hasLayer(window.plugin.extendPolyLines.polylineLinesLayerGroup);
   if (!(drawPolygonLines || drawPolylineLines))
     return;
-
-  // var mark = function (name) {
-  //   window.performance && window.performance.mark && window.performance.mark(name);
-  // };
-
-  // var measure = function(name, start, end) {
-  //   window.performance && window.performance.measure && window.performance.measure(name, start, end);
-  // };
-
-  // var clearMeasures = function() {
-  //   window.performance && window.performance.clearMeasures && window.performance.clearMeasures();
-  // }
-
-  // var logMeasurement = function(text) {
-  //   window.performance && window.performance.getEntriesByType && console.log(text + " took " + window.performance.getEntriesByName("updateLayer")[0].duration + "ms")
-  // }
-  
-  //mark("updateLayerStart");
   
   // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/) 
   var vincenty_inverse =  function (p1, p2) {
@@ -211,11 +193,6 @@ window.plugin.extendPolyLines.updateLayer = function() {
     else if (layer instanceof L.GeodesicPolyline)
       processPolyline(layer);
   });
-  
-  // mark("updateLayerEnd");
-  // measure("updateLayer", "updateLayerStart", "updateLayerEnd");
-  // logMeasurement("Extend Polygon Lines: updateLayer");
-  // clearMeasures("updateLayer");
 }
 
 window.plugin.extendPolyLines.setup = function() {
