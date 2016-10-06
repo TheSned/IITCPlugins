@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        0.0.8
+// @version        0.0.9
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of a polygon out past their vertices. Useful for determining which portals can be used for a layered field. drawTools Required.
@@ -30,10 +30,13 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 // use own namespace for plugin
 window.plugin.extendPolyLines = function() {};
 
-window.plugin.extendPolyLines.linesLayerGroup = null;
+window.plugin.extendPolyLines.polygonLinesLayerGroup = null;
+window.plugin.extendPolyLines.polylineLinesLayerGroup = null
 
 window.plugin.extendPolyLines.updateLayer = function() {
-  if (!window.map.hasLayer(window.plugin.extendPolyLines.linesLayerGroup))
+  var drawPolygonLines = window.map.hasLayer(window.plugin.extendPolyLines.polygonLinesLayerGroup);
+  var drawPolylineLines = window.map.hasLayer(window.plugin.extendPolyLines.polylineLinesLayerGroup);
+  if (!(drawPolygonLines || drawPolylineLines))
     return;
   
   window.performance.mark("updateLayerStart");
@@ -138,12 +141,13 @@ window.plugin.extendPolyLines.updateLayer = function() {
     };
   };
 
-  var drawLink = function(a, b, style) {
+  var drawLink = function(a, b, style, layerGroup) {
     var poly = L.geodesicPolyline([a, b], style);
-    poly.addTo(window.plugin.extendPolyLines.linesLayerGroup);
+    poly.addTo(layerGroup);
   };
 
-  var extendEdge = function(a,b) {
+  var extendEdge = function(a,b,layerGroup) {
+    if(!a || !b) return;
     var inverse = vincenty_inverse(a,b);
     var maxLinkDistance = 6881280;
     var maxLinkToAnchor = maxLinkDistance - inverse.distance;
@@ -157,7 +161,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
       clickable: false,
       smoothFactor: 1,
       dashArray: [6, 4],
-    });
+    }, layerGroup);
   };
 
   var processPolygon = function(layer) {
@@ -166,8 +170,8 @@ window.plugin.extendPolyLines.updateLayer = function() {
     $.each(vertices, function(idx, vertex) {
       var previousVertex = (idx === 0) ? vertices[vertices.length - 1] : vertices[idx - 1];
       var nextVertex = (idx === (vertices.length - 1)) ? vertices[0] : vertices[idx + 1];
-      extendEdge(previousVertex, vertex);
-      extendEdge(nextVertex, vertex);
+      extendEdge(previousVertex, vertex, window.plugin.extendPolyLines.polygonLinesLayerGroup);
+      extendEdge(nextVertex, vertex, window.plugin.extendPolyLines.polygonLinesLayerGroup);
     });
   };
 
@@ -175,15 +179,15 @@ window.plugin.extendPolyLines.updateLayer = function() {
     var vertices = layer.getLatLngs();
 
     $.each(vertices, function(idx, vertex) {
-      if(idx === 0 || idx === (vertices.length - 1)) return;
-      var previousVertex = vertices[idx - 1];
-      var nextVertex = vertices[idx + 1];
-      extendEdge(previousVertex, vertex);
-      extendEdge(nextVertex, vertex);
+      var previousVertex = idx === 0 ? null : vertices[idx - 1];
+      var nextVertex = idx === (vertices.length - 1) ? null : vertices[idx + 1];
+      extendEdge(previousVertex, vertex, window.plugin.extendPolyLines.polylineLinesLayerGroup);
+      extendEdge(nextVertex, vertex, window.plugin.extendPolyLines.polylineLinesLayerGroup);
     });
   };
 
-  window.plugin.extendPolyLines.linesLayerGroup.clearLayers();
+  window.plugin.extendPolyLines.polygonLinesLayerGroup.clearLayers();
+  window.plugin.extendPolyLines.polylineLinesLayerGroup.clearLayers();
 
   window.plugin.drawTools.drawnItems.eachLayer(function(layer) {
     if (layer instanceof L.GeodesicPolygon)
@@ -199,14 +203,15 @@ window.plugin.extendPolyLines.updateLayer = function() {
 }
 
 window.plugin.extendPolyLines.setup = function() {
-  window.plugin.extendPolyLines.linesLayerGroup = new L.LayerGroup();
+  window.plugin.extendPolyLines.polygonLinesLayerGroup = new L.LayerGroup();
+  window.plugin.extendPolyLines.polylineLinesLayerGroup = new L.LayerGroup();
   
   window.addHook('iitcLoaded', function(e) {
     window.plugin.extendPolyLines.updateLayer();
   });
 
   window.map.on('layeradd', function(e) {
-    if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
+    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
   });
 
@@ -215,7 +220,7 @@ window.plugin.extendPolyLines.setup = function() {
   });
 
   window.map.on('layerremove', function(e) {
-    if (e.layer === window.plugin.extendPolyLines.linesLayerGroup)
+    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
   });
 
@@ -223,7 +228,8 @@ window.plugin.extendPolyLines.setup = function() {
     window.plugin.extendPolyLines.updateLayer();
   });
 
-  window.addLayerGroup('Extend Polygon Lines', window.plugin.extendPolyLines.linesLayerGroup, false);
+  window.addLayerGroup('Extend Polygon Lines', window.plugin.extendPolyLines.polygonLinesLayerGroup, false);
+  window.addLayerGroup('Extend Polyline Lines', window.plugin.extendPolyLines.polylineLinesLayerGroup, false);
 }
 var setup = window.plugin.extendPolyLines.setup;
 
