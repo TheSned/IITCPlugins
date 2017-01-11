@@ -2,14 +2,18 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        1.0.0
+// @version        1.0.1
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
-// @description    Extends the lines of a polygon out past their vertices. Useful for determining which portals can be used for a layered field. drawTools Required.
-// @include        https://www.ingress.com/intel*
-// @include        http://www.ingress.com/intel*
-// @match          https://www.ingress.com/intel*
-// @match          http://www.ingress.com/intel*
+// @description    Extends the lines of polygons and polylines out past their vertices. Useful for determining which portals can be used for a layered field. Draw Tools are required.
+// @include        https://*.ingress.com/intel*
+// @include        http://*.ingress.com/intel*
+// @match          https://*.ingress.com/intel*
+// @match          http://*.ingress.com/intel*
+// @include        https://*.ingress.com/mission/*
+// @include        http://*.ingress.com/mission/*
+// @match          https://*.ingress.com/mission/*
+// @match          http://*.ingress.com/mission/*
 // @grant          none
 // ==/UserScript==
 
@@ -38,14 +42,16 @@ window.plugin.extendPolyLines.updateLayer = function() {
   var drawPolylineLines = window.map.hasLayer(window.plugin.extendPolyLines.polylineLinesLayerGroup);
   if (!(drawPolygonLines || drawPolylineLines))
     return;
-  
-  // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/) 
+
+  //var vincenty_ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
+  var vincenty_ellipsoid = { a: 6367000, b: 6367000, f: 0 }; // Sphere
+
+  // From Leaflet.Geodesic (https://github.com/henrythasler/Leaflet.Geodesic/)
   var vincenty_inverse =  function (p1, p2) {
     var φ1 = p1.lat.toRadians(), λ1 = p1.lng.toRadians();
     var φ2 = p2.lat.toRadians(), λ2 = p2.lng.toRadians();
-    
-    var ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
-    var a = ellipsoid.a, b = ellipsoid.b, f = ellipsoid.f;
+
+    var a = vincenty_ellipsoid.a, b = vincenty_ellipsoid.b, f = vincenty_ellipsoid.f;
 
     var L = λ2 - λ1;
     var tanU1 = (1-f) * Math.tan(φ1), cosU1 = 1 / Math.sqrt((1 + tanU1*tanU1)), sinU1 = tanU1 * cosU1;
@@ -94,8 +100,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
     var α1 = initialBearing.toRadians();
     var s = distance;
 
-    var ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
-    var a = ellipsoid.a, b = ellipsoid.b, f = ellipsoid.f;
+    var a = vincenty_ellipsoid.a, b = vincenty_ellipsoid.b, f = vincenty_ellipsoid.f;
 
     var sinα1 = Math.sin(α1);
     var cosα1 = Math.cos(α1);
@@ -125,7 +130,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
     var C = f/16*cosSqα*(4+f*(4-3*cosSqα));
     var L = λ - (1-C) * f * sinα *
       (σ + C*sinσ*(cos2σM+C*cosσ*(-1+2*cos2σM*cos2σM)));
-        
+
     if(wrap)
       var λ2 = (λ1+L+3*Math.PI)%(2*Math.PI) - Math.PI; // normalise to -180...+180
     else
@@ -133,9 +138,9 @@ window.plugin.extendPolyLines.updateLayer = function() {
 
     var revAz = Math.atan2(sinα, -x);
 
-    return {lat: φ2.toDegrees(), 
+    return {lat: φ2.toDegrees(),
       lng: λ2.toDegrees(),
-      finalBearing: revAz.toDegrees() 
+      finalBearing: revAz.toDegrees()
     };
   };
 
@@ -198,7 +203,7 @@ window.plugin.extendPolyLines.updateLayer = function() {
 window.plugin.extendPolyLines.setup = function() {
   window.plugin.extendPolyLines.polygonLinesLayerGroup = new L.LayerGroup();
   window.plugin.extendPolyLines.polylineLinesLayerGroup = new L.LayerGroup();
-  
+
   window.addHook('iitcLoaded', function(e) {
     window.plugin.extendPolyLines.updateLayer();
   });
@@ -226,12 +231,12 @@ window.plugin.extendPolyLines.setup = function() {
 }
 var setup = window.plugin.extendPolyLines.setup;
 
-  
+
 /** Extend Number object with method to convert numeric degrees to radians */
 if (typeof Number.prototype.toRadians == 'undefined') {
     Number.prototype.toRadians = function() { return this * Math.PI / 180; }
 }
-  
+
 /** Extend Number object with method to convert radians to numeric (signed) degrees */
 if (typeof Number.prototype.toDegrees == 'undefined') {
     Number.prototype.toDegrees = function() { return this * 180 / Math.PI; }
