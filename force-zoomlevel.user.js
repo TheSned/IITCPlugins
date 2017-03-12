@@ -103,7 +103,7 @@ window.plugin.forceZoomLevel.setup  = function() {
   
   try {
     var mode = localStorage['plugin-forcezoomlevel-mode'];
-    if(mode.length === 0) {
+    if(typeof(mode) === 'undefined') {
       mode = 'Default';
     }
     window.plugin.forceZoomLevel.setMode(mode);
