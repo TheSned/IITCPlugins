@@ -2,9 +2,9 @@
 // @id             iitc-plugin-force-zoomlevel
 // @name           IITC plugin: Force Zoom Level
 // @category       Tweaks
-// @version        0.1.0.20170312.33752
+// @version        0.1.0.20170312.40451
 // @namespace      https://iitc.me
-// @description    [local-2017-03-12-033752] Force IITC to load all portals, all links, or default regardless of zoom level.
+// @description    [local-2017-03-12-040451] Force IITC to load all portals, all links, or default regardless of zoom level.
 // @include        https://*.ingress.com/intel*
 // @include        http://*.ingress.com/intel*
 // @match          https://*.ingress.com/intel*
@@ -24,7 +24,7 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 //PLUGIN AUTHORS: writing a plugin outside of the IITC build environment? if so, delete these lines!!
 //(leaving them in place might break the 'About IITC' page or break update checks)
 plugin_info.buildName = 'local';
-plugin_info.dateTimeVersion = '20170312.33752';
+plugin_info.dateTimeVersion = '20170312.40451';
 plugin_info.pluginId = 'force-zoomlevel';
 //END PLUGIN AUTHORS NOTE
 
@@ -48,6 +48,9 @@ window.plugin.forceZoomLevel.zoomOptions = {
 
 window.plugin.forceZoomLevel.showDialog = function() {
   var div = document.createElement('div');
+  
+  div.appendChild(document.createTextNode('Select a forced zoom level: '));
+  div.appendChild(document.createElement('br'));
 
   for(var option in window.plugin.forceZoomLevel.zoomOptions) {
     var label = div.appendChild(document.createElement('label'));
@@ -100,6 +103,9 @@ window.plugin.forceZoomLevel.setup  = function() {
   
   try {
     var mode = localStorage['plugin-forcezoomlevel-mode'];
+    if(mode.length === 0) {
+      mode = 'Default';
+    }
     window.plugin.forceZoomLevel.setMode(mode);
   } catch(e) {
     console.warn(e);
