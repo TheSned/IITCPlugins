@@ -14,4 +14,6 @@ Enable the 'Extend Polygon Lines' or 'Extend Polyline Lines' layer to see the ex
 
 ![force-zoomlevel](img/force-zoomlevel.png)
 
+Direct Link: [Click Here](https://raw.githubusercontent.com/TheSned/IITCPlugins/master/force-zoomlevel.user.js)
+
 Forces the display of All Portals or All Links regardless of zoom level. Select the forced zoom level you want in the "Force Zoom Opt" dialog. Warning: This can cause many requests to the server at high zoom levels.
