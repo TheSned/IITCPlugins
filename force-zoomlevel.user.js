@@ -2,7 +2,7 @@
 // @id             iitc-plugin-force-zoomlevel
 // @name           IITC plugin: Force Zoom Level
 // @category       Tweaks
-// @version        0.1.0.20170312.40451
+// @version        0.1.1.20170527.40451
 // @namespace      https://iitc.me
 // @description    [local-2017-03-12-040451] Force IITC to load all portals, all links, or default regardless of zoom level.
 // @include        https://*.ingress.com/intel*
