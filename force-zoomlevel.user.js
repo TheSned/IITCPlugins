@@ -92,6 +92,7 @@ window.plugin.forceZoomLevel.setMode = function (mode) {
       window.getDataZoomForMapZoom = window.getDataZoomForMapZoomAllPortals;
       break;
   }
+  window.mapDataRequest.start();
 }
 
 window.plugin.forceZoomLevel.setup  = function() {
