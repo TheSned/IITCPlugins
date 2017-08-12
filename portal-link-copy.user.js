@@ -2,7 +2,7 @@
 // @id             portal-link-copy@sned
 // @name           IITC plugin: Portal Link Copy
 // @category       Tweaks
-// @version        1.0.0.20170812.30832
+// @version        1.0.1.20170812.30832
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    [local-2017-08-12-030832] Click the portal link to copy it to the clipboard.
 // @include        https://*.ingress.com/intel*
@@ -44,7 +44,7 @@ window.plugin.portalLinkCopy.setup = function() {
       if($(this).text() === 'Portal link') {
         $(this).click(function(e) {
           if(document.queryCommandSupported('copy')){
-            $('body').append('<textarea class="copy-portal-link-textarea">' + $(this).attr('href') + '</textarea>');
+            $('body').append('<textarea class="copy-portal-link-textarea">' + this.href + '</textarea>');
             $('.copy-portal-link-textarea').select();
             document.execCommand('copy');
             $('.copy-portal-link-textarea').remove();
