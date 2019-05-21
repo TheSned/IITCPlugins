@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        1.0.4
+// @version        1.0.5
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of polygons and polylines out past their vertices. Useful for determining which portals can be used for a layered field. Draw Tools are required.
@@ -40,7 +40,7 @@ window.plugin.extendPolyLines.polylineLinesLayerGroup = null
 window.plugin.extendPolyLines.updateLayer = function() {
   var drawPolygonLines = window.map.hasLayer(window.plugin.extendPolyLines.polygonLinesLayerGroup);
   var drawPolylineLines = window.map.hasLayer(window.plugin.extendPolyLines.polylineLinesLayerGroup);
-  if (!(drawPolygonLines || drawPolylineLines))
+  if (!(drawPolygonLines || drawPolylineLines) || !window.plugin.drawTools || !window.plugin.drawTools.drawnItems)
     return;
 
   //var vincenty_ellipsoid = { a: 6378137, b: 6356752.3142, f: 1/298.257223563 }; // WGS-84
