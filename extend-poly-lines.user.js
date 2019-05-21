@@ -2,7 +2,7 @@
 // @id             extend-poly-lines@dsnedecor
 // @name           IITC plugin: Extend Polygon Lines
 // @category       Layer
-// @version        1.0.2
+// @version        1.0.4
 // @updateURL      https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.meta.js
 // @downloadURL    https://raw.githubusercontent.com/TheSned/IITCPlugins/master/extend-poly-lines.user.js
 // @description    Extends the lines of polygons and polylines out past their vertices. Useful for determining which portals can be used for a layered field. Draw Tools are required.
@@ -210,7 +210,8 @@ window.plugin.extendPolyLines.setup = function() {
   });
 
   window.map.on('layeradd', function(e) {
-    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup)
+    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup 
+		|| e.layer === window.plugin.extendPolyLines.polylineLinesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
   });
 
@@ -219,10 +220,12 @@ window.plugin.extendPolyLines.setup = function() {
   });
 
   window.map.on('layerremove', function(e) {
-    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup)
+    if (e.layer === window.plugin.extendPolyLines.polygonLinesLayerGroup
+		|| e.layer === window.plugin.extendPolyLines.polylineLinesLayerGroup)
       window.plugin.extendPolyLines.updateLayer();
   });
 
+	window.pluginCreateHook('pluginDrawTools');
   window.addHook('pluginDrawTools', function(e) {
     window.plugin.extendPolyLines.updateLayer();
   });
@@ -257,5 +260,3 @@ var info = {};
 if (typeof GM_info !== 'undefined' && GM_info && GM_info.script) info.script = { version: GM_info.script.version, name: GM_info.script.name, description: GM_info.script.description };
 script.appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));
 (document.body || document.head || document.documentElement).appendChild(script);
-
-
